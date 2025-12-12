@@ -38,9 +38,6 @@ export function buildSearchQuery(
     parts.push(`followers:>${filters.min_followers}`);
   }
 
-  // Add type:user to ensure we're searching for users
-  parts.push('type:user');
-
   return parts.join(' ');
 }
 

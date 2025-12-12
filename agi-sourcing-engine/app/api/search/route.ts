@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // 3. Score each candidate
     const scoredCandidates = githubUsers.map(user => {
       const totalStars = user.repositories.reduce(
-        (sum, repo) => sum + repo.stargazerCount,
+        (sum, repo) => sum + (typeof repo.stargazerCount === 'number' && !isNaN(repo.stargazerCount) ? repo.stargazerCount : 0),
         0
       );
 
@@ -142,16 +142,16 @@ export async function POST(request: NextRequest) {
             url: repo.url,
             stargazer_count: repo.stargazerCount,
             fork_count: repo.forkCount,
-            watchers_count: 0,
+            watchers_count: 0, // Not provided in our query
             primary_language: repo.primaryLanguage,
             languages: repo.languages,
             topics: repo.topics,
             created_at: repo.createdAt,
             pushed_at: repo.pushedAt,
             is_fork: repo.isFork,
-            repo_category: null,
-            relevance_score: 0,
-            candidate_id: 0,
+            repo_category: null, // Can be enhanced later
+            relevance_score: 0, // Can be enhanced later
+            candidate_id: 0, // Will be set by upsertCandidate
           })
         );
 
@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
           `Failed to save candidate ${scored.user.login}:`,
           error
         );
+        // Continue with other candidates
       }
     }
 
@@ -172,15 +173,21 @@ export async function POST(request: NextRequest) {
       ? scoredCandidates.reduce((sum, c) => sum + c.score, 0) / scoredCandidates.length
       : 0;
 
-    const searchId = await logSearchHistory({
-      query_string: validated.keywords.join(' '),
-      modality: validated.modality as Modality,
-      keywords: validated.keywords,
-      filters: validated.filters || {},
-      results_count: scoredCandidates.length,
-      avg_score: avgScore,
-      execution_time_ms: Date.now() - startTime,
-    });
+    let searchId: number | undefined;
+    try {
+      searchId = await logSearchHistory({
+        query_string: validated.keywords.join(' '),
+        modality: validated.modality as Modality,
+        keywords: validated.keywords,
+        filters: validated.filters || {},
+        results_count: scoredCandidates.length,
+        avg_score: avgScore,
+        execution_time_ms: Date.now() - startTime,
+      });
+    } catch (logError) {
+      console.error('Failed to log search history:', logError);
+      // Continue without logging
+    }
 
     // 7. Return results
     const response = {
@@ -214,24 +221,26 @@ export async function POST(request: NextRequest) {
     };
 
     return NextResponse.json(response);
-  } catch (error) {
-    console.error('Search error:', error);
+  } catch (err: unknown) {
+    console.error('Search error:', err);
 
-    if (error instanceof z.ZodError) {
+    if (err instanceof z.ZodError) {
+      const zodError = err as z.ZodError;
       return NextResponse.json(
         {
           error: 'Invalid request',
-          details: error.errors,
+          details: zodError.errors,
         },
         { status: 400 }
       );
     }
 
-    if (error instanceof Error) {
+    if (err instanceof Error) {
+      const errorObj = err as Error;
       return NextResponse.json(
         {
           error: 'Search failed',
-          message: error.message,
+          message: errorObj.message,
         },
         { status: 500 }
       );
@@ -246,6 +255,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// GET endpoint to check API status
 export async function GET() {
   return NextResponse.json({
     status: 'ready',

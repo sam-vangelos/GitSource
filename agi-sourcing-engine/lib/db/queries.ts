@@ -1,12 +1,11 @@
 import { getSupabaseAdmin } from './client';
+import type { Modality } from '../constants';
 import type {
   Candidate,
   CandidateInsert,
   CandidateWithRepos,
-  Repository,
   RepositoryInsert,
   SearchHistory,
-  Modality,
 } from './schema';
 
 const supabaseAdmin = getSupabaseAdmin();
@@ -39,7 +38,7 @@ export async function upsertCandidate(
       new Set([...(existing.modalities || []), ...(candidateData.modalities || [])])
     );
 
-    const { data: updated, error: updateError } = await supabaseAdmin
+    const { error: updateError } = await supabaseAdmin
       .from('candidates')
       .update({
         ...candidateData,

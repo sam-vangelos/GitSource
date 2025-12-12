@@ -1,5 +1,4 @@
 import { Modality, MODALITY_KEYWORDS } from '../constants';
-import type { GitHubRepo } from '../github/types';
 import type { ScoreExplanation } from '../db/schema';
 
 interface ScoringInput {

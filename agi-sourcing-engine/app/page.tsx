@@ -155,7 +155,7 @@ export default function Home() {
                   <span className="font-semibold">{(results.execution_time_ms / 1000).toFixed(1)}s</span>
                 </p>
                 <p className="text-white/50 text-xs mt-1">
-                  Average score: {results.avg_score.toFixed(2)}
+                  Average score: {typeof results.avg_score === 'number' && !isNaN(results.avg_score) ? results.avg_score.toFixed(2) : 'N/A'}
                 </p>
               </div>
             </div>
