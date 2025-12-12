@@ -5,7 +5,8 @@ import { scoreCandidate } from '@/lib/scoring/simple-scorer';
 import { upsertCandidate, logSearchHistory } from '@/lib/db/queries';
 import { MODALITIES } from '@/lib/constants';
 import type { Modality } from '@/lib/constants';
-import type { CandidateInsert, RepositoryInsert } from '@/lib/db/schema';
+import type { Candidate, CandidateInsert, RepositoryInsert } from '@/lib/db/schema';
+
 const SearchRequestSchema = z.object({
   keywords: z.array(z.string()).min(1, 'At least one keyword required'),
   modality: z.enum(MODALITIES),
@@ -17,7 +18,7 @@ const SearchRequestSchema = z.object({
       min_followers: z.number().optional(),
     })
     .optional(),
-  max_results: z.number().default(100).max(200),
+  max_results: z.number().max(200).default(100),
 });
 
 export async function POST(request: NextRequest) {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     console.log(`Scored ${scoredCandidates.length} candidates`);
 
     // 5. Save to database
-    const savedCandidates = [];
+    const savedCandidates: Candidate[] = [];
     
     for (const scored of scoredCandidates) {
       try {
@@ -141,16 +142,16 @@ export async function POST(request: NextRequest) {
             url: repo.url,
             stargazer_count: repo.stargazerCount,
             fork_count: repo.forkCount,
-            watchers_count: 0, // Not provided in our query
+            watchers_count: 0,
             primary_language: repo.primaryLanguage,
             languages: repo.languages,
             topics: repo.topics,
             created_at: repo.createdAt,
             pushed_at: repo.pushedAt,
             is_fork: repo.isFork,
-            repo_category: null, // Can be enhanced later
-            relevance_score: 0, // Can be enhanced later
-            candidate_id: 0, // Will be set by upsertCandidate
+            repo_category: null,
+            relevance_score: 0,
+            candidate_id: 0,
           })
         );
 
@@ -161,7 +162,6 @@ export async function POST(request: NextRequest) {
           `Failed to save candidate ${scored.user.login}:`,
           error
         );
-        // Continue with other candidates
       }
     }
 
@@ -246,7 +246,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to check API status
 export async function GET() {
   return NextResponse.json({
     status: 'ready',
