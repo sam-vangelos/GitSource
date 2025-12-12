@@ -94,7 +94,7 @@ export async function searchGitHubUsers(
     const batchSize = Math.min(50, maxResults - users.length); // GitHub max is 100, but 50 is safer
 
     try {
-      const response = await makeGraphQLRequest<GitHubSearchResponse>(SEARCH_USERS_QUERY, {
+      const response: GitHubSearchResponse = await makeGraphQLRequest<GitHubSearchResponse>(SEARCH_USERS_QUERY, {
         query,
         first: batchSize,
         after: endCursor,
@@ -140,7 +140,16 @@ export async function searchGitHubUsers(
 }
 
 export async function checkRateLimit(): Promise<RateLimit> {
-  const response = await makeGraphQLRequest<{
+  const response: {
+    data: {
+      rateLimit: {
+        limit: number;
+        remaining: number;
+        resetAt: string;
+        cost: number;
+      };
+    };
+  } = await makeGraphQLRequest<{
     data: {
       rateLimit: {
         limit: number;
