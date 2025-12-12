@@ -5,7 +5,6 @@ import { scoreCandidate } from '@/lib/scoring/simple-scorer';
 import { upsertCandidate, logSearchHistory } from '@/lib/db/queries';
 import { MODALITIES } from '@/lib/constants';
 import type { Modality } from '@/lib/constants';
-import type { GitHubUser } from '@/lib/github/types';
 import type { CandidateInsert, RepositoryInsert } from '@/lib/db/schema';
 
 const SearchRequestSchema = z.object({
