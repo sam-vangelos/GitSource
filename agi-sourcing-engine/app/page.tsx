@@ -5,6 +5,7 @@ import { PageShell, Button, Card, Tag } from '@/components/hedra-primitives';
 import { Input } from '@/components/ui/input';
 import { MODALITIES, MODALITY_LABELS, type Modality } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
+import type { ScoreExplanation } from '@/lib/db/schema';
 
 interface SearchResult {
   id?: number;
@@ -17,7 +18,7 @@ interface SearchResult {
   total_stars: number;
   modalities: Modality[];
   primary_languages: string[];
-  score_explanation: any;
+  score_explanation: ScoreExplanation | null;
   top_repos: Array<{
     name: string;
     url: string;

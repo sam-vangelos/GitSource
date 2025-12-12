@@ -1,4 +1,5 @@
-import type { GitHubUser, GitHubRepo, GitHubSearchResponse, RateLimit } from './types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { GitHubUser, GitHubSearchResponse, RateLimit } from './types';
 import { SEARCH_USERS_QUERY, RATE_LIMIT_QUERY, buildSearchQuery } from './queries';
 import type { SearchFilters } from '../db/schema';
 
@@ -10,7 +11,7 @@ if (!process.env.GITHUB_TOKEN) {
 
 async function makeGraphQLRequest<T>(
   query: string,
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
 ): Promise<T> {
   const token = process.env.GITHUB_TOKEN;
 
@@ -44,37 +45,41 @@ async function makeGraphQLRequest<T>(
   return data as T;
 }
 
-function parseGitHubUser(node: any): GitHubUser {
+function parseGitHubUser(node: unknown): GitHubUser {
+  const n = node as any; // temporary cast
   return {
-    login: node.login,
-    name: node.name,
-    bio: node.bio,
-    avatarUrl: node.avatarUrl,
-    url: node.url,
-    email: node.email,
-    twitterUsername: node.twitterUsername,
-    websiteUrl: node.websiteUrl,
-    company: node.company,
-    location: node.location,
-    followers: node.followers.totalCount,
-    following: node.following.totalCount,
-    publicRepos: node.repositories.totalCount,
-    createdAt: node.createdAt,
-    id: node.databaseId || Date.now(), // Use GitHub's numeric databaseId
-    repositories: node.repositoryList.nodes.map((repo: any): GitHubRepo => ({
-      name: repo.name,
-      description: repo.description,
-      url: repo.url,
-      stargazerCount: repo.stargazerCount,
-      forkCount: repo.forkCount,
-      primaryLanguage: repo.primaryLanguage?.name || null,
-      languages: repo.languages.nodes.map((l: any) => l.name),
-      topics: repo.repositoryTopics.nodes.map((t: any) => t.topic.name),
-      createdAt: repo.createdAt,
-      pushedAt: repo.pushedAt,
-      isFork: repo.isFork,
-      id: repo.databaseId || Date.now(),
-    })),
+    login: n.login,
+    name: n.name,
+    bio: n.bio,
+    avatarUrl: n.avatarUrl,
+    url: n.url,
+    email: n.email,
+    twitterUsername: n.twitterUsername,
+    websiteUrl: n.websiteUrl,
+    company: n.company,
+    location: n.location,
+    followers: n.followers.totalCount,
+    following: n.following.totalCount,
+    publicRepos: n.repositories.totalCount,
+    createdAt: n.createdAt,
+    id: n.databaseId || Date.now(), // Use GitHub's numeric databaseId
+    repositories: n.repositoryList.nodes.map((repo: unknown) => {
+      const r = repo as any;
+      return {
+      name: r.name,
+      description: r.description,
+      url: r.url,
+      stargazerCount: r.stargazerCount,
+      forkCount: r.forkCount,
+      primaryLanguage: r.primaryLanguage?.name || null,
+      languages: r.languages.nodes.map((l: unknown) => (l as { name: string }).name),
+      topics: r.repositoryTopics.nodes.map((t: unknown) => (t as { topic: { name: string } }).topic.name),
+      createdAt: r.createdAt,
+      pushedAt: r.pushedAt,
+      isFork: r.isFork,
+      id: r.databaseId || Date.now(),
+    }
+    }),
   };
 }
 

@@ -227,7 +227,7 @@ export async function updateCandidateOutreachStatus(
   status: string,
   notes?: string
 ): Promise<void> {
-  const updateData: any = {
+  const updateData: Record<string, string | undefined> = {
     outreach_status: status,
   };
 
@@ -271,7 +271,7 @@ export async function logSearchHistory(searchData: {
   query_string: string;
   modality: Modality | null;
   keywords: string[];
-  filters: any;
+  filters: Record<string, unknown>;
   results_count: number;
   avg_score: number | null;
   execution_time_ms: number;

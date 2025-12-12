@@ -44,7 +44,6 @@ export const tokens = {
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "success" | "warning" | "error" | "neutral"
   size?: "navigation" | "hero" | "primary" | "secondary" | "tertiary" | "minimal"
-  view?: "founder" | "internal"
   loading?: boolean
   icon?: React.ReactNode
   children: React.ReactNode
@@ -53,7 +52,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({
   variant = "primary",
   size = "secondary",
-  view = "founder",
   loading = false,
   icon,
   className,
