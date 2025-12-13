@@ -100,6 +100,7 @@ export interface ScoreExplanation {
   top_signals: Signal[];
   keyword_match_score: number;
   star_score: number;
+  activity_score: number;
   final_score: number;
   matched_keywords: string[];
   matched_repos: string[];

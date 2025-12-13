@@ -9,6 +9,8 @@ interface ScoringInput {
     description: string | null;
     name: string;
     primaryLanguage: string | null;
+    pushedAt: string;
+    createdAt: string;
   }>;
 }
 
@@ -118,6 +120,22 @@ function calculateStarScore(totalStars: number): number {
   return Math.min(totalStars / 1000, 1.0);
 }
 
+function calculateActivityScore(repositories: ScoringInput['repositories']): number {
+  const now = new Date();
+  const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+  
+  let activeRepos = 0;
+  for (const repo of repositories) {
+    const pushedAt = new Date(repo.pushedAt);
+    if (pushedAt > oneYearAgo) {
+      activeRepos++;
+    }
+  }
+  
+  // Score based on fraction of repos active in last year
+  return activeRepos / Math.max(repositories.length, 1);
+}
+
 export function scoreCandidate(
   candidate: ScoringInput,
   modality: Modality
@@ -131,9 +149,10 @@ export function scoreCandidate(
   // Calculate component scores
   const keywordMatchScore = calculateKeywordScore(matchCount);
   const starScore = calculateStarScore(candidate.totalStars);
+  const activityScore = calculateActivityScore(candidate.repositories);
 
-  // Final score: 70% keywords, 30% stars
-  const finalScore = keywordMatchScore * 0.7 + starScore * 0.3;
+  // Final score: 60% keywords, 20% stars, 20% activity
+  const finalScore = keywordMatchScore * 0.6 + starScore * 0.2 + activityScore * 0.2;
 
   // Build explanation
   const explanation: ScoreExplanation = {
@@ -142,16 +161,22 @@ export function scoreCandidate(
       {
         type: 'KEYWORD_MATCH',
         value: `${matchedKeywords.size} unique keywords`,
-        contribution: keywordMatchScore * 0.7,
+        contribution: keywordMatchScore * 0.6,
       },
       {
         type: 'STAR_COUNT',
         value: `${candidate.totalStars} stars`,
-        contribution: starScore * 0.3,
+        contribution: starScore * 0.2,
+      },
+      {
+        type: 'ACTIVITY',
+        value: `${Math.round(activityScore * 100)}% repos active`,
+        contribution: activityScore * 0.2,
       },
     ],
     keyword_match_score: keywordMatchScore,
     star_score: starScore,
+    activity_score: activityScore,
     final_score: finalScore,
     matched_keywords: Array.from(matchedKeywords),
     matched_repos: Array.from(matchedRepos),
